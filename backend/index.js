@@ -64,3 +64,16 @@ const authenticate = (req, res, next) => {
         }
     });
 };
+
+app.get("/bills", authenticate, async (req, res) => {
+    try {
+        const response = await pool.query(
+            "SELECT * FROM bills WHERE user_id = $1",
+            [req.user.id]
+        );
+        res.json(rows);
+    } catch (err) {
+        console.log(err);
+        return res.status(403).json({ error: "DB Error" });
+    }
+});
