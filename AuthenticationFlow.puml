@@ -1,0 +1,17 @@
+@startuml "Authentication Flow"
+
+title Authentication Flow
+
+actor Client as "Client (React)"
+participant AuthController
+participant UserService
+database Database
+
+Client -> AuthController: POST /login (username, password)
+AuthController -> UserService: validateCredentials()
+UserService -> Database: findUser()
+Database --> UserService: userData
+UserService --> AuthController: validationResult
+AuthController --> Client: JWT Token
+
+@enduml

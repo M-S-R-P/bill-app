@@ -1,0 +1,54 @@
+@startuml "Class Diagram"
+
+title Bill Approval System - Class Diagram
+
+class User {
+    +id: int
+    +username: string
+    +password: string
+    +email: string
+    +role: string
+    +login(): void
+    +logout(): void
+    +resetPassword(): void
+}
+
+class Bill {
+    +id: int
+    +userId: int
+    +amount: float
+    +description: string
+    +status: string
+    +submissionDate: Date
+    +approvalDate: Date
+    +submit(): void
+    +modify(): void
+    +delete(): void
+}
+
+class BillApproval {
+    +id: int
+    +billId: int
+    +approverId: int
+    +status: string
+    +comments: string
+    +approvalDate: Date
+    +approve(): void
+    +reject(): void
+}
+
+class Report {
+    +id: int
+    +type: string
+    +startDate: Date
+    +endDate: Date
+    +generateReport(): void
+    +exportPDF(): void
+}
+
+User "1" -- "*" Bill : submits
+User "1" -- "*" BillApproval : approves
+Bill "1" -- "1" BillApproval : has
+User "1" -- "*" Report : generates
+
+@enduml

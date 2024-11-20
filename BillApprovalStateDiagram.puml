@@ -1,0 +1,18 @@
+@startuml "Bill Approval State Diagram"
+
+title Bill Approval Flow
+
+[*] --> Submitted
+Submitted: User submits bill
+Submitted --> UnderReview: Approver starts review
+
+UnderReview --> Approved: Approver accepts
+UnderReview --> Rejected: Approver rejects
+UnderReview --> RequestChanges: Approver requests modifications
+
+RequestChanges --> Submitted: User modifies
+
+Approved --> [*]
+Rejected --> [*]
+
+@enduml

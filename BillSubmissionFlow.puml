@@ -1,0 +1,19 @@
+@startuml "Bill Submission Flow"
+
+title Bill Submission Flow
+
+actor Client as "Client (React)"
+participant APIGateway
+participant BillService
+participant NotificationService
+database Database
+
+Client -> APIGateway: POST /bills (with JWT)
+APIGateway -> APIGateway: Validate JWT
+APIGateway -> BillService: Create Bill
+BillService -> Database: Save Bill
+Database --> BillService: Confirmation
+BillService -> NotificationService: Notify Approvers
+NotificationService --> Client: Bill Created Successfully
+
+@enduml
