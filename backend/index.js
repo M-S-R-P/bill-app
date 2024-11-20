@@ -13,7 +13,8 @@ app.listen(5000, () => {
     console.log("Listening on port 5000");
 });
 
-// Login method
+// Login route
+
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
@@ -71,6 +72,8 @@ const authenticate = (req, res, next) => {
     });
 };
 
+// Fetch Bills route
+
 app.get("/bills", authenticate, async (req, res) => {
     try {
         const response = await pool.query(
@@ -83,6 +86,8 @@ app.get("/bills", authenticate, async (req, res) => {
         return res.status(403).json({ error: "DB Error" });
     }
 });
+
+// Bill submition route
 
 app.post("/submit", authenticate, async (req, res) => {
     const { trip_dates_from, trip_dates_to, expenses, justification } =
@@ -102,5 +107,30 @@ app.post("/submit", authenticate, async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(403).json({ error: "DB Error (inserting bill)" });
+    }
+});
+
+// Bill modification route
+
+app.put("/modify/:id", authenticate, async (req, res) => {
+    const { id } = req.params;
+    const { trip_dates_from, trip_dates_to, expenses, justification } =
+        req.body;
+    if (!trip_dates_from || !trip_dates_to || !expenses || !justification) {
+        console.log(req.body, "Missing values");
+        return res.status(403).json({ error: "Missing values" });
+    }
+    try {
+        const { rows } = pool.query(
+            "UPDATE bills SET trip_dates_from = $1, trip_dates_to = $2, expenses = $3, justification = $4 RETURNING *",
+            [trip_dates_from, trip_dates_to, expenses, justification]
+        );
+        res.status(201).json({
+            message: "Modified successfully",
+            bill: rows[0],
+        });
+    } catch (err) {
+        console.log(err);
+        return res.status(403).json({ error: "DB Error" });
     }
 });
