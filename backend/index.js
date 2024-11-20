@@ -90,7 +90,7 @@ app.get("/bills", authenticate, async (req, res) => {
     }
 });
 
-// Bill submition route
+// Bill submission route
 
 app.post("/submit", authenticate, async (req, res) => {
     const { user_id } = req.user;
@@ -102,13 +102,7 @@ app.post("/submit", authenticate, async (req, res) => {
     try {
         const result = await pool.query(
             "INSERT INTO bills (user_id, trip_dates_from, trip_dates_to, expenses, justification) VALUES ($1, $2, $3, $4, $5)",
-            [
-                user_id,
-                trip_dates_from,
-                trip_dates_to,
-                expenses,
-                justification,
-            ]
+            [user_id, trip_dates_from, trip_dates_to, expenses, justification]
         );
         res.status(201).json({
             message: "Bill submitted successfully",
@@ -131,15 +125,34 @@ app.put("/modify/:id", authenticate, async (req, res) => {
         return res.status(403).json({ error: "Missing values" });
     }
     try {
-        const { rows } = pool.query(
+        const { rows } = await pool.query(
             "UPDATE bills SET trip_dates_from = $1, trip_dates_to = $2, expenses = $3, justification = $4 WHERE id = $5 RETURNING *",
             [trip_dates_from, trip_dates_to, expenses, justification, id]
         );
         res.status(201).json({
             message: "Modified successfully",
+            bill: rows[0]
         });
     } catch (err) {
         console.log(err);
         return res.status(403).json({ error: "DB Error" });
+    }
+});
+
+// Bill deletion route
+
+app.delete("/delete/:id", authenticate, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const { rows } = await pool.query("DELETE FROM bills WHERE id = $1", [
+            id,
+        ]);
+        return res.json({
+            message: "Bill deleted successfully",
+            bill: rows[0],
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(403).json({ error: "Error deleting bill" });
     }
 });
