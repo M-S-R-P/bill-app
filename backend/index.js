@@ -135,7 +135,6 @@ app.put("/modify/:id", authenticate, async (req, res) => {
             "UPDATE bills SET trip_dates_from = $1, trip_dates_to = $2, expenses = $3, justification = $4 WHERE id = $5 RETURNING *",
             [trip_dates_from, trip_dates_to, expenses, justification, id]
         );
-        console.log(rows)
         res.status(201).json({
             message: "Modified successfully",
         });
