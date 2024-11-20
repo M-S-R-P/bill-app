@@ -46,6 +46,9 @@ app.post("/login", async (req, res) => {
 // Authentication Middleware
 
 const authenticate = (req, res, next) => {
+    if (!req.headers.authorization) {
+        return res.status(401).json({ error: "No header provided" });
+    }
     const token = req.headers.authorization.split(" ")[1];
     if (!token) {
         return res.status(401).json({ error: "No token provided" });
@@ -80,7 +83,7 @@ app.get("/bills", authenticate, async (req, res) => {
             "SELECT * FROM bills WHERE user_id = $1",
             [req.user.id]
         );
-        res.json(rows);
+        res.json(response.rows);
     } catch (err) {
         console.log(err);
         return res.status(403).json({ error: "DB Error" });
