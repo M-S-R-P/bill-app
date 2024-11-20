@@ -93,6 +93,7 @@ app.get("/bills", authenticate, async (req, res) => {
 // Bill submition route
 
 app.post("/submit", authenticate, async (req, res) => {
+    const { user_id } = req.user;
     const { trip_dates_from, trip_dates_to, expenses, justification } =
         req.body;
     if (!trip_dates_from || !trip_dates_to || !expenses || !justification) {
@@ -100,8 +101,14 @@ app.post("/submit", authenticate, async (req, res) => {
     }
     try {
         const result = await pool.query(
-            "INSERT INTO bills (trip_dates_from, trip_dates_to, expenses, justification) VALUES ($1, $2, $3, $4)",
-            [trip_dates_from, trip_dates_to, expenses, justification]
+            "INSERT INTO bills (user_id, trip_dates_from, trip_dates_to, expenses, justification) VALUES ($1, $2, $3, $4, $5)",
+            [
+                user_id,
+                trip_dates_from,
+                trip_dates_to,
+                expenses,
+                justification,
+            ]
         );
         res.status(201).json({
             message: "Bill submitted successfully",
@@ -125,7 +132,7 @@ app.put("/modify/:id", authenticate, async (req, res) => {
     }
     try {
         const { rows } = pool.query(
-            "UPDATE bills SET trip_dates_from = $1, trip_dates_to = $2, expenses = $3, justification = $4 RETURNING *",
+            "UPDATE bills SET user_id, trip_dates_from = $1, trip_dates_to = $2, expenses = $3, justification = $4 RETURNING *",
             [trip_dates_from, trip_dates_to, expenses, justification]
         );
         res.status(201).json({
