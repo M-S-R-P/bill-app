@@ -77,3 +77,24 @@ app.get("/bills", authenticate, async (req, res) => {
         return res.status(403).json({ error: "DB Error" });
     }
 });
+
+app.post("/submit", authenticate, async (req, res) => {
+    const { trip_dates_from, trip_dates_to, expenses, justification } =
+        req.body;
+    if (!trip_dates_from || !trip_dates_to || !expenses || !justification) {
+        return res.status(400).json({ error: "All fields are required" });
+    }
+    try {
+        const result = await pool.query(
+            "INSERT INTO bills (trip_dates_from, trip_dates_to, expenses, justification) VALUES ($1, $2, $3, $4)",
+            [trip_dates_from, trip_dates_to, expenses, justification]
+        );
+        res.status(201).json({
+            message: "Bill submitted successfully",
+            bill: result.rows[0],
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(403).json({ error: "DB Error (inserting bill)" });
+    }
+});
