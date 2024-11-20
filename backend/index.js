@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { jwt } = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 const pool = require("./db");
 
 const app = express();
@@ -19,11 +19,17 @@ app.post("/login", async (req, res) => {
 
     try {
         const { rows } = await pool.query(
-            "SELECT * users WHERE username = $1",
+            "SELECT * FROM users WHERE username = $1",
             [username]
         );
         if (rows.length === 0 || password != rows[0].password) {
-            console.log("Invalid Username/Password", rows.length);
+            console.log(
+                "Invalid Username/Password",
+                rows.length,
+                username,
+                password,
+                req.body
+            );
             return res.status(401).json({ error: "Invalid Username/Password" });
         }
         const token = jwt.sign({ id: rows[0].id }, "your_secret_key", {
