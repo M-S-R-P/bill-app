@@ -145,7 +145,7 @@ app.delete("/delete/:id", authenticate, async (req, res) => {
     const { id } = req.params;
     try {
         const { rows } = await pool.query(
-            "DELETE FROM bills WHERE id = $1 AND user_id = $2",
+            "DELETE FROM bills WHERE id = $1 AND user_id = $2 RETURNING *",
             [id, req.user.id]
         );
         return res.json({
@@ -155,5 +155,83 @@ app.delete("/delete/:id", authenticate, async (req, res) => {
     } catch (err) {
         console.log(err);
         res.status(403).json({ error: "Error deleting bill" });
+    }
+});
+
+// Bill semi-approval route
+
+app.put("/sapprove/:id", authenticate, async (req, res) => {
+    const { id } = req.params;
+    if (req.user.role < 2) {
+        console.log("Role error");
+        return res.status(401).json({ error: "Role is not matching" });
+    }
+    try {
+        const { rows } = await pool.query(
+            "UPDATE bills SET status = 1 WHERE id = $1 AND user_id != $2 RETURNING *",
+            [id, req.user.id]
+        );
+        if (rows.length === 0) {
+            throw new Error("Bill doesn't exist/User can't self-approve bill");
+        }
+        return res.json({
+            message: "Bill semi-approved successfully",
+            bill: rows[0],
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(403).json({ error: "Error semi-approving bill" });
+    }
+});
+
+// Bill full approve route
+
+app.put("/fapprove/:id", authenticate, async (req, res) => {
+    const { id } = req.params;
+    if (req.user.role < 3) {
+        console.log("Role error");
+        return res.status(401).json({ error: "Role is not matching" });
+    }
+    try {
+        const { rows } = await pool.query(
+            "UPDATE bills SET status = 2 WHERE id = $1 AND user_id != $2 RETURNING *",
+            [id, req.user.id]
+        );
+        if (rows.length === 0) {
+            throw new Error("Bill doesn't exist/User can't self-approve bill");
+        }
+        return res.json({
+            message: "Bill approved successfully",
+            bill: rows[0],
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(403).json({ error: "Error approving bill" });
+    }
+});
+
+// Bill rejection route
+
+app.put("/reject/:id", authenticate, async (req, res) => {
+    const { id } = req.params;
+    if (req.user.role < 2) {
+        console.log("Role error");
+        return res.status(401).json({ error: "Role is not matching" });
+    }
+    try {
+        const { rows } = await pool.query(
+            "UPDATE bills SET status = 3 WHERE id = $1 AND user_id != $2 RETURNING *",
+            [id, req.user.id]
+        );
+        if (rows.length === 0) {
+            throw new Error("Bill doesn't exist/User can't self-reject bill");
+        }
+        return res.json({
+            message: "Bill rejected successfully",
+            bill: rows[0],
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(403).json({ error: "Error rejecting bill" });
     }
 });
