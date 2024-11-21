@@ -75,12 +75,12 @@ const authenticate = (req, res, next) => {
     });
 };
 
-// Fetch Bills route
+// Fetch active bills route
 
 app.get("/bills", authenticate, async (req, res) => {
     try {
         const response = await pool.query(
-            "SELECT * FROM bills WHERE user_id = $1",
+            "SELECT * FROM bills WHERE user_id = $1 AND status != 2 AND status != 3",
             [req.user.id]
         );
         res.json(response.rows);
@@ -235,3 +235,16 @@ app.put("/reject/:id", authenticate, async (req, res) => {
         res.status(403).json({ error: "Error rejecting bill" });
     }
 });
+
+// Fetch old bills route
+
+app.get("/oldbills", authenticate, async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            "SELECT * FROM bills WHERE status IN (2,3) AND user_id = $1",
+            [req.user.id]
+        );
+        return res.json({oldbills:rows})
+    } catch (err) {}
+});
+
