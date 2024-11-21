@@ -90,6 +90,18 @@ app.get("/bills", authenticate, async (req, res) => {
     }
 });
 
+// Fetch old bills route
+
+app.get("/oldbills", authenticate, async (req, res) => {
+    try {
+        const { rows } = await pool.query(
+            "SELECT * FROM bills WHERE status IN (2,3) AND user_id = $1",
+            [req.user.id]
+        );
+        return res.json({ oldbills: rows });
+    } catch (err) {}
+});
+
 // Bill submission route
 
 app.post("/submit", authenticate, async (req, res) => {
@@ -157,6 +169,8 @@ app.delete("/delete/:id", authenticate, async (req, res) => {
         res.status(403).json({ error: "Error deleting bill" });
     }
 });
+
+// ***************** Approver Routes *****************
 
 // Bill semi-approval route
 
@@ -236,15 +250,38 @@ app.put("/reject/:id", authenticate, async (req, res) => {
     }
 });
 
-// Fetch old bills route
+// All bills route
 
-app.get("/oldbills", authenticate, async (req, res) => {
+app.get("/allbills", authenticate, async (req, res) => {
+    if (req.user.role < 2) {
+        console.log("Role not matching /allbills", req.user);
+        res.status(401).json({ error: "Unauthorized" });
+    }
     try {
-        const { rows } = await pool.query(
-            "SELECT * FROM bills WHERE status IN (2,3) AND user_id = $1",
-            [req.user.id]
+        const { rows } = pool.query(
+            "SELECT * FROM bills WHERE status != 2 AND status != 3"
         );
-        return res.json({oldbills:rows})
-    } catch (err) {}
+        return res.json({ allBills: rows });
+    } catch (err) {
+        console.log(err);
+        return res.status(403).json({ error: "DB Error" });
+    }
 });
 
+// All old bills route
+
+app.get("/alloldbills", authenticate, async (req, res) => {
+    if (req.user.role < 2) {
+        console.log("Role not matching /alloldbills", req.user);
+        res.status(401).json({ error: "Unauthorized" });
+    }
+    try {
+        const { rows } = pool.query(
+            "SELECT * FROM bills WHERE status != 2 AND status != 3"
+        );
+        return res.json({ oldBills: rows });
+    } catch (err) {
+        console.log(err);
+        return res.status(403).json({ error: "DB Error" });
+    }
+});
