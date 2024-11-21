@@ -131,7 +131,7 @@ app.put("/modify/:id", authenticate, async (req, res) => {
         );
         res.status(201).json({
             message: "Modified successfully",
-            bill: rows[0]
+            bill: rows[0],
         });
     } catch (err) {
         console.log(err);
@@ -144,9 +144,10 @@ app.put("/modify/:id", authenticate, async (req, res) => {
 app.delete("/delete/:id", authenticate, async (req, res) => {
     const { id } = req.params;
     try {
-        const { rows } = await pool.query("DELETE FROM bills WHERE id = $1", [
-            id,
-        ]);
+        const { rows } = await pool.query(
+            "DELETE FROM bills WHERE id = $1 AND user_id = $2",
+            [id, req.user.id]
+        );
         return res.json({
             message: "Bill deleted successfully",
             bill: rows[0],
