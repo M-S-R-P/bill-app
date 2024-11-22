@@ -17,7 +17,12 @@ app.listen(5000, () => {
 
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
-
+    if (!username || !password) {
+        console.log("Incomplete Login fields");
+        return res
+            .status(403)
+            .json({ error: "Empty Username/Password field(s)" });
+    }
     try {
         const { rows } = await pool.query(
             "SELECT * FROM users WHERE username = $1",
@@ -33,9 +38,7 @@ app.post("/login", async (req, res) => {
             );
             return res.status(401).json({ error: "Invalid Username/Password" });
         }
-        const token = jwt.sign({ id: rows[0].id }, "your_secret_key", {
-            expiresIn: "1h",
-        });
+        const token = jwt.sign({ id: rows[0].id }, "your_secret_key");
         res.json({ token });
     } catch (err) {
         res.status(403).json({ error: "DBError" });
@@ -109,6 +112,7 @@ app.post("/submit", authenticate, async (req, res) => {
     const { trip_dates_from, trip_dates_to, expenses, justification } =
         req.body;
     if (!trip_dates_from || !trip_dates_to || !expenses || !justification) {
+        console.log("Missing fields in submit form");
         return res.status(400).json({ error: "All fields are required" });
     }
     try {
@@ -133,7 +137,7 @@ app.put("/modify/:id", authenticate, async (req, res) => {
     const { trip_dates_from, trip_dates_to, expenses, justification } =
         req.body;
     if (!trip_dates_from || !trip_dates_to || !expenses || !justification) {
-        console.log(req.body, "Missing values");
+        console.log(req.body, "Missing values in modify form");
         return res.status(403).json({ error: "Missing values" });
     }
     try {
